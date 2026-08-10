@@ -51,6 +51,22 @@ These are non-negotiable requirements derived from real production incidents:
 - No unnecessary dependencies — keep the binary small
 
 ## Mandatory Pre-Work
-Before making code changes, read the relevant skill:
+Before making code changes, read the relevant skill and docs:
 1. **Architecture/design decisions**: `.agents/skills/unsample-architecture/SKILL.md`
 2. **Safety guardrails**: `.agents/skills/unsample-safety/SKILL.md`
+
+## Project Documents (`.agents/docs/`)
+All project research, design, and planning docs are stored here for portability across devices:
+
+| File | Contents |
+|---|---|
+| `design_doc.md` | Engineering design doc — architecture, components, implementation specs, Go code skeletons |
+| `design_lessons.md` | Sherlog-derived lessons — 3 production incidents, 9 safeguards, collector/SDK patterns |
+| `implementation_plan.md` | Phased execution plan — 16 days, ~60 hours, daily task breakdown |
+| `product_overview.md` | Product overview — problem, solution, market trends, roadmap, positioning |
+| `gtm_plan.md` | Go-to-market plan — Reddit/HN launch sequence, content calendar, pricing |
+| `competitive_analysis.md` | Competitive landscape — 15+ players, SWOT, pricing, market sizing |
+| `internal_design_prompt.md` | Prompts used to extract Sherlog architecture insights |
+| `market_validation.md` | Market validation evidence from research |
+| `idea_pressure_test.md` | Pressure test of all 5 candidate ideas |
+
