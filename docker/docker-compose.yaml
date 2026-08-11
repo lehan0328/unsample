@@ -48,19 +48,17 @@ services:
       - "3200:3200"   # Tempo HTTP API (trace polling)
     restart: unless-stopped
 
-  # --- Jaeger UI ---
-  # Trace viewer connected to Tempo via the Jaeger gRPC query API.
-  # Provides the UI for viewing debug traces at http://localhost:16686.
-  jaeger-ui:
-    image: jaegertracing/jaeger-query:1.62.0
+  # --- Jaeger All-in-One ---
+  # Standalone trace viewer with its own in-memory storage.
+  # Receives traces directly from the Collector via OTLP.
+  # UI available at http://localhost:16686.
+  jaeger:
+    image: jaegertracing/jaeger:2.6.0
     environment:
-      - GRPC_STORAGE_SERVER=tempo:9096
-      - SPAN_STORAGE_TYPE=grpc
+      - COLLECTOR_OTLP_ENABLED=true
     ports:
       - "16686:16686"  # Jaeger UI
-    depends_on:
-      tempo:
-        condition: service_started
+      - "4320:4317"    # OTLP gRPC (Jaeger's own receiver, non-default port)
     restart: unless-stopped
 
 volumes:

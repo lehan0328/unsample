@@ -95,16 +95,13 @@ services:
     ports:
       - "3200:3200"
 
-  jaeger-ui:
-    image: jaegertracing/jaeger-query:1.62.0
+  jaeger:
+    image: jaegertracing/jaeger:2.6.0
     environment:
-      - GRPC_STORAGE_SERVER=tempo:9096
-      - SPAN_STORAGE_TYPE=grpc
+      - COLLECTOR_OTLP_ENABLED=true
     ports:
       - "16686:16686"
-    depends_on:
-      tempo:
-        condition: service_started
+      - "4320:4317"
 
 volumes:
   tempo-data:

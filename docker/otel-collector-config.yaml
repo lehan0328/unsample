@@ -49,6 +49,12 @@ exporters:
   otlphttp/production:
     endpoint: http://tempo:4318
 
+  # Jaeger — all traces for UI visualization.
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+
   # Console debug output (useful during development).
   debug:
     verbosity: basic
@@ -65,14 +71,14 @@ service:
       processors: [memory_limiter, batch]
       exporters: [routing]
 
-    # Debug pipeline — receives routed debug spans, exports to Tempo.
+    # Debug pipeline — receives routed debug spans, exports to Tempo + Jaeger.
     traces/debug:
       receivers: [routing]
       processors: [batch]
-      exporters: [otlphttp/debug, debug]
+      exporters: [otlphttp/debug, otlp/jaeger, debug]
 
-    # Production pipeline — receives non-debug spans, exports to Tempo.
+    # Production pipeline — receives non-debug spans, exports to Tempo + Jaeger.
     traces/production:
       receivers: [routing]
       processors: [batch]
-      exporters: [otlphttp/production]
+      exporters: [otlphttp/production, otlp/jaeger]
