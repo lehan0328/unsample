@@ -16,6 +16,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/unsample/unsample/internal/cli"
 	"github.com/unsample/unsample/internal/version"
 )
 
@@ -43,7 +44,12 @@ Works with your existing OTel-instrumented services and Collector.`,
 		},
 	})
 
-	// Debug command (placeholder — will be fully implemented in Day 2)
+	// Debug command
+	var (
+		cfgPath string
+		curlCmd string
+	)
+
 	debugCmd := &cobra.Command{
 		Use:   "debug <url>",
 		Short: "Send a debug-traced HTTP request",
@@ -56,18 +62,33 @@ The CLI will:
   3. Send the request and display the HTTP response
   4. Wait for the trace to be indexed
   5. Output a deep link to the trace viewer`,
-		Args: cobra.ExactArgs(1),
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			url := args[0]
-			fmt.Printf("🔍 Debug tracing: %s\n", url)
-			fmt.Println("⚠️  CLI debug command will be fully implemented in Day 2")
-			return nil
+			cfg, err := cli.LoadConfig(cfgPath)
+			if err != nil {
+				return err
+			}
+
+			opts := cli.DefaultDebugOpts()
+			opts.CurlCmd = curlCmd
+
+			// URL is required unless --curl is provided.
+			var rawURL string
+			if curlCmd != "" {
+				rawURL = "" // URL comes from the curl command
+			} else {
+				if len(args) == 0 {
+					return fmt.Errorf("URL is required\n\nUsage: unsample debug <url>\n   or: unsample debug --curl '<curl command>'")
+				}
+				rawURL = args[0]
+			}
+
+			return cli.RunDebug(cmd.Context(), cfg, rawURL, opts)
 		},
 	}
 
-	// Debug command flags (will be wired in Day 2)
-	debugCmd.Flags().String("curl", "", "Parse and send a curl command string")
-	debugCmd.Flags().StringP("config", "c", "", "Path to config file (default: ~/.unsample/config.yaml)")
+	debugCmd.Flags().StringVar(&curlCmd, "curl", "", "Parse and send a curl command string")
+	debugCmd.Flags().StringVarP(&cfgPath, "config", "c", "", "Path to config file (default: ~/.unsample/config.yaml)")
 
 	rootCmd.AddCommand(debugCmd)
 
