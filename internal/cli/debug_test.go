@@ -28,6 +28,7 @@ func TestRunDebugInjectsHeaders(t *testing.T) {
 	}
 	opts := DefaultDebugOpts()
 	opts.Output = &bytes.Buffer{}
+	opts.SkipPoll = true
 
 	err := RunDebug(context.Background(), cfg, srv.URL, opts)
 	if err != nil {
@@ -71,6 +72,7 @@ func TestRunDebugDisplaysResponse(t *testing.T) {
 	var buf bytes.Buffer
 	opts := DefaultDebugOpts()
 	opts.Output = &buf
+	opts.SkipPoll = true
 
 	err := RunDebug(context.Background(), cfg, srv.URL, opts)
 	if err != nil {
@@ -101,6 +103,7 @@ func TestRunDebugMissingSecret(t *testing.T) {
 	cfg := &Config{Secret: ""}
 	opts := DefaultDebugOpts()
 	opts.Output = &bytes.Buffer{}
+	opts.SkipPoll = true
 
 	err := RunDebug(context.Background(), cfg, "https://example.com", opts)
 	if err == nil {
@@ -126,6 +129,7 @@ func TestRunDebugWithCurl(t *testing.T) {
 	}
 	opts := DefaultDebugOpts()
 	opts.Output = &bytes.Buffer{}
+	opts.SkipPoll = true
 	opts.CurlCmd = "curl -X POST " + srv.URL
 
 	err := RunDebug(context.Background(), cfg, "", opts)
@@ -152,6 +156,7 @@ func TestRunDebugServerError(t *testing.T) {
 	var buf bytes.Buffer
 	opts := DefaultDebugOpts()
 	opts.Output = &buf
+	opts.SkipPoll = true
 
 	// Should not return error — server errors are valid responses to display.
 	err := RunDebug(context.Background(), cfg, srv.URL, opts)

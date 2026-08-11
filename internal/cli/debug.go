@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/unsample/unsample/internal/token"
+	"github.com/unsample/unsample/internal/trace"
 )
 
 // DebugOpts holds options for the debug command.
@@ -27,6 +28,9 @@ type DebugOpts struct {
 
 	// HTTPClient is the HTTP client to use (defaults to a client with timeout).
 	HTTPClient *http.Client
+
+	// SkipPoll skips trace polling (useful for tests or when backend is unavailable).
+	SkipPoll bool
 }
 
 // DefaultDebugOpts returns DebugOpts with sensible defaults.
@@ -112,8 +116,19 @@ func RunDebug(ctx context.Context, cfg *Config, rawURL string, opts DebugOpts) e
 	// Display trace info.
 	fmt.Fprintln(out)
 	printTraceHeader(out)
-	printTraceWaiting(out, traceID)
-	printTraceLink(out, cfg.Viewer.URL, traceID)
+
+	if opts.SkipPoll || cfg.Backend.Endpoint == "" {
+		// No backend configured — show trace ID and deep link without polling.
+		printTraceWaiting(out, traceID)
+		printTraceLink(out, cfg.Viewer.URL, traceID)
+	} else {
+		// Poll Tempo for the trace.
+		fmt.Fprintf(out, "⏳ Waiting for trace...\n")
+		pollCfg := trace.DefaultPollConfig(cfg.Backend.Endpoint)
+		result := trace.Poll(ctx, traceID, pollCfg)
+		trace.PrintSummary(out, result, cfg.Viewer.URL, traceID)
+	}
+
 	printSeparator(out)
 
 	return nil
