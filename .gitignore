@@ -23,6 +23,7 @@ Thumbs.db
 # Build
 dist/
 build/
+collector-build/
 
 # Config (contains secrets)
 .unsample/

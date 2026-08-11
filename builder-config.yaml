@@ -1,0 +1,43 @@
+# OpenTelemetry Collector Builder (OCB) Manifest
+#
+# Builds a custom Collector binary that includes the unsample processor.
+# This is the production alternative to using the contrib image with the
+# routing connector.
+#
+# Usage:
+#   go install go.opentelemetry.io/collector/cmd/builder@latest
+#   builder --config=builder-config.yaml
+#
+# Or use the build script:
+#   ./scripts/build-collector.sh
+
+dist:
+  name: unsample-collector
+  description: OTel Collector with Unsample debug routing processor
+  output_path: ./collector-build
+  otelcol_version: 0.115.0
+
+receivers:
+  - gomod: go.opentelemetry.io/collector/receiver/otlpreceiver v0.115.0
+
+processors:
+  - gomod: go.opentelemetry.io/collector/processor/batchprocessor v0.115.0
+  - gomod: go.opentelemetry.io/collector/processor/memorylimiterprocessor v0.115.0
+
+exporters:
+  - gomod: go.opentelemetry.io/collector/exporter/otlpexporter v0.115.0
+  - gomod: go.opentelemetry.io/collector/exporter/otlphttpexporter v0.115.0
+  - gomod: go.opentelemetry.io/collector/exporter/debugexporter v0.115.0
+
+extensions:
+  - gomod: go.opentelemetry.io/collector/extension/zpagesextension v0.115.0
+
+# TODO: Add the unsample processor once it's published as a public module.
+# Currently in internal/collector/ — needs to be moved to a public package
+# or referenced via a replace directive for local builds:
+#
+# processors:
+#   - gomod: github.com/unsample/unsample/processor/unsampleprocessor v0.1.0
+#
+# replaces:
+#   - github.com/unsample/unsample/processor/unsampleprocessor => ./processor/unsampleprocessor
