@@ -35,14 +35,7 @@ const (
 // The token includes the trace ID, current timestamp, and an HMAC-SHA256
 // signature that can be verified by any component sharing the same secret.
 func Generate(secret, traceID string) string {
-	timestamp := time.Now().Unix()
-	payload := traceID + separator + strconv.FormatInt(timestamp, 10)
-
-	mac := hmac.New(sha256.New, []byte(secret))
-	mac.Write([]byte(payload))
-	sig := base64.URLEncoding.EncodeToString(mac.Sum(nil))
-
-	return fmt.Sprintf("%s%s%d%s%s", traceID, separator, timestamp, separator, sig)
+	return GenerateWithTimestamp(secret, traceID, time.Now().Unix())
 }
 
 // GenerateWithTimestamp creates a signed debug token with a specific timestamp.
@@ -66,14 +59,15 @@ func Verify(tokenStr, secret string, maxAge time.Duration) bool {
 		return false
 	}
 
-	// Check expiry
+	// Capture current time once for consistent expiry + future checks.
+	now := time.Now()
 	tokenTime := time.Unix(timestamp, 0)
-	if time.Since(tokenTime) > maxAge {
+	if now.Sub(tokenTime) > maxAge {
 		return false
 	}
 
 	// Check that the token is not from the future (clock skew tolerance: 1 min)
-	if tokenTime.After(time.Now().Add(1 * time.Minute)) {
+	if tokenTime.After(now.Add(1 * time.Minute)) {
 		return false
 	}
 

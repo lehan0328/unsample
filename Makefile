@@ -3,7 +3,7 @@ GO=go
 GOFLAGS=-trimpath
 LDFLAGS=-s -w -X github.com/unsample/unsample/internal/version.Version=$(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 
-.PHONY: all build test lint clean install
+.PHONY: all build test lint bench clean install
 
 all: build
 
@@ -20,6 +20,9 @@ test-coverage:
 
 lint:
 	golangci-lint run ./...
+
+bench:
+	$(GO) test -bench=. -benchmem ./...
 
 clean:
 	rm -f $(BINARY_NAME)
