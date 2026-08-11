@@ -8,9 +8,10 @@
 *.so
 vendor/
 
-# IDE
+# IDE / Agent
 .idea/
 .vscode/
+.agents/
 *.swp
 *.swo
 *~
