@@ -22,7 +22,7 @@ services:
   # When building for production, replace with the custom binary
   # built by scripts/build-collector.sh.
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.115.0
+    image: otel/opentelemetry-collector-contrib:0.158.0
     command: ["--config", "/etc/otel/config.yaml"]
     volumes:
       - ./otel-collector-config.yaml:/etc/otel/config.yaml:ro
