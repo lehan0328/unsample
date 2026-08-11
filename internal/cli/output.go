@@ -37,10 +37,10 @@ func printTraceHeader(w io.Writer) {
 	fmt.Fprintf(w, "─── Debug Trace ─────────────────────────────────\n")
 }
 
-// printTraceWaiting writes the "waiting for trace" message.
+// printTraceWaiting writes a fallback message when trace polling is skipped.
 func printTraceWaiting(w io.Writer, traceID string) {
 	fmt.Fprintf(w, "⏳ Trace ID: %s\n", traceID)
-	fmt.Fprintf(w, "   (Trace polling will be implemented in Day 5)\n")
+	fmt.Fprintf(w, "   (No backend configured — set backend.endpoint in config to enable polling)\n")
 }
 
 // printTraceLink writes the deep link to the trace viewer.
