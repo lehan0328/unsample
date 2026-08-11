@@ -1,0 +1,110 @@
+# Unsample Demo: 3-Service Application
+#
+# Demonstrates Unsample debug tracing across a multi-service architecture:
+#   Gateway → Billing → Notification
+#
+# Usage:
+#   docker-compose up --build       Build and start everything
+#   docker-compose down -v          Stop and remove volumes
+#
+# Then run:
+#   unsample debug http://localhost:8080/checkout?user=123
+#   unsample debug http://localhost:8080/checkout?user=666  (triggers error)
+#
+# Ports:
+#   8080  - Gateway (entry point)
+#   8081  - Billing
+#   8082  - Notification
+#   4317  - OTLP gRPC (Collector)
+#   16686 - Jaeger UI
+#   3200  - Tempo HTTP API
+
+services:
+
+  # --- Application Services ---
+
+  gateway:
+    build:
+      context: ../..
+      dockerfile: examples/demo-app/Dockerfile
+      args:
+        SERVICE: gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - UNSAMPLE_SECRET=${UNSAMPLE_SECRET:-demo-secret-do-not-use-in-production}
+      - BILLING_URL=http://billing:8081
+      - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
+    depends_on:
+      - billing
+      - otel-collector
+
+  billing:
+    build:
+      context: ../..
+      dockerfile: examples/demo-app/Dockerfile
+      args:
+        SERVICE: billing
+    ports:
+      - "8081:8081"
+    environment:
+      - PORT=8081
+      - UNSAMPLE_SECRET=${UNSAMPLE_SECRET:-demo-secret-do-not-use-in-production}
+      - NOTIFICATION_URL=http://notification:8082
+      - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
+    depends_on:
+      - notification
+      - otel-collector
+
+  notification:
+    build:
+      context: ../..
+      dockerfile: examples/demo-app/Dockerfile
+      args:
+        SERVICE: notification
+    ports:
+      - "8082:8082"
+    environment:
+      - PORT=8082
+      - UNSAMPLE_SECRET=${UNSAMPLE_SECRET:-demo-secret-do-not-use-in-production}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
+    depends_on:
+      - otel-collector
+
+  # --- Observability Stack ---
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.115.0
+    command: ["--config", "/etc/otel/config.yaml"]
+    volumes:
+      - ../../docker/otel-collector-config.yaml:/etc/otel/config.yaml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    depends_on:
+      tempo:
+        condition: service_started
+
+  tempo:
+    image: grafana/tempo:2.6.1
+    command: ["-config.file=/etc/tempo/config.yaml"]
+    volumes:
+      - ../../docker/tempo-config.yaml:/etc/tempo/config.yaml:ro
+      - tempo-data:/var/tempo
+    ports:
+      - "3200:3200"
+
+  jaeger-ui:
+    image: jaegertracing/jaeger-query:1.62.0
+    environment:
+      - GRPC_STORAGE_SERVER=tempo:9096
+      - SPAN_STORAGE_TYPE=grpc
+    ports:
+      - "16686:16686"
+    depends_on:
+      tempo:
+        condition: service_started
+
+volumes:
+  tempo-data:
