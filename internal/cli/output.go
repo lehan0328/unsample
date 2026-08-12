@@ -44,9 +44,12 @@ func printTraceWaiting(w io.Writer, traceID string) {
 }
 
 // printTraceLink writes the deep link to the trace viewer.
+// Supports both Grafana (Tempo datasource) and Jaeger URL patterns.
 func printTraceLink(w io.Writer, viewerURL, traceID string) {
 	viewerURL = strings.TrimRight(viewerURL, "/")
-	fmt.Fprintf(w, "   → %s/trace/%s\n", viewerURL, traceID)
+	// Grafana Tempo explore URL pattern (works from Grafana v10+).
+	// Jaeger pattern: /trace/{traceID}
+	fmt.Fprintf(w, "   → %s/explore?schemaVersion=1&panes=%%7B%%22a7a%%22:%%7B%%22datasource%%22:%%22tempo%%22,%%22queries%%22:%%5B%%7B%%22refId%%22:%%22A%%22,%%22query%%22:%%22%s%%22,%%22queryType%%22:%%22traceql%%22%%7D%%5D%%7D%%7D&orgId=1\n", viewerURL, traceID)
 }
 
 // printSeparator writes a closing separator line.

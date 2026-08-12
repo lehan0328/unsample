@@ -22,7 +22,7 @@ func PrintSummary(w io.Writer, result PollResult, viewerURL, traceID string) {
 	if !result.Found {
 		fmt.Fprintf(w, "⏳ Trace not found after %s\n", result.Elapsed.Round(time.Second))
 		fmt.Fprintf(w, "   The trace may still be ingesting. Check manually:\n")
-		fmt.Fprintf(w, "   → %s/trace/%s\n", strings.TrimRight(viewerURL, "/"), traceID)
+		fmt.Fprintf(w, "   → %s\n", buildViewerURL(viewerURL, traceID))
 		return
 	}
 
@@ -36,8 +36,8 @@ func PrintSummary(w io.Writer, result PollResult, viewerURL, traceID string) {
 
 	fmt.Fprintf(w, "✅ Trace captured (%d span%s, %dms)\n",
 		result.SpanCount, pluralize(result.SpanCount), maxDuration)
-	fmt.Fprintf(w, "   → %s/trace/%s\n",
-		strings.TrimRight(viewerURL, "/"), traceID)
+	fmt.Fprintf(w, "   → %s\n",
+		buildViewerURL(viewerURL, traceID))
 
 	if len(result.Spans) > 0 {
 		fmt.Fprintln(w)
@@ -77,6 +77,13 @@ func printSpanTree(w io.Writer, spans []SpanSummary) {
 		fmt.Fprintf(w, "   %-*s  %4dms  %s %s%s\n",
 			maxNameLen, label, s.DurationMs, statusIcon, s.StatusCode, statusSuffix)
 	}
+}
+
+// buildViewerURL constructs a trace viewer deep link.
+// Uses the Grafana Tempo explore URL pattern.
+func buildViewerURL(viewerURL, traceID string) string {
+	base := strings.TrimRight(viewerURL, "/")
+	return fmt.Sprintf("%s/explore?schemaVersion=1&panes=%%7B%%22a7a%%22:%%7B%%22datasource%%22:%%22tempo%%22,%%22queries%%22:%%5B%%7B%%22refId%%22:%%22A%%22,%%22query%%22:%%22%s%%22,%%22queryType%%22:%%22traceql%%22%%7D%%5D%%7D%%7D&orgId=1", base, traceID)
 }
 
 // pluralize returns "s" for counts other than 1.

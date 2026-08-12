@@ -11,12 +11,14 @@
 #   unsample debug http://localhost:8080/checkout?user=123
 #   unsample debug http://localhost:8080/checkout?user=666  (triggers error)
 #
+# View traces at: http://localhost:3000/explore
+#
 # Ports:
 #   8080  - Gateway (entry point)
 #   8081  - Billing
 #   8082  - Notification
 #   4317  - OTLP gRPC (Collector)
-#   16686 - Jaeger UI
+#   3000  - Grafana UI (trace viewer)
 #   3200  - Tempo HTTP API
 
 services:
@@ -95,13 +97,19 @@ services:
     ports:
       - "3200:3200"
 
-  jaeger:
-    image: jaegertracing/jaeger:2.6.0
+  grafana:
+    image: grafana/grafana:11.6.0
     environment:
-      - COLLECTOR_OTLP_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    volumes:
+      - ../../docker/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
     ports:
-      - "16686:16686"
-      - "4320:4317"
+      - "3000:3000"
+    depends_on:
+      tempo:
+        condition: service_started
 
 volumes:
   tempo-data:

@@ -46,8 +46,8 @@ func defaultConfig() *Config {
 			Endpoint: "http://localhost:3200",
 		},
 		Viewer: ViewerConfig{
-			Type: "jaeger",
-			URL:  "http://localhost:16686",
+			Type: "grafana",
+			URL:  "http://localhost:3000",
 		},
 	}
 }

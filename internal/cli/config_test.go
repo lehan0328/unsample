@@ -18,11 +18,11 @@ func TestLoadConfigDefaults(t *testing.T) {
 	if cfg.Backend.Endpoint != "http://localhost:3200" {
 		t.Errorf("Backend.Endpoint = %q, want %q", cfg.Backend.Endpoint, "http://localhost:3200")
 	}
-	if cfg.Viewer.Type != "jaeger" {
-		t.Errorf("Viewer.Type = %q, want %q", cfg.Viewer.Type, "jaeger")
+	if cfg.Viewer.Type != "grafana" {
+		t.Errorf("Viewer.Type = %q, want %q", cfg.Viewer.Type, "grafana")
 	}
-	if cfg.Viewer.URL != "http://localhost:16686" {
-		t.Errorf("Viewer.URL = %q, want %q", cfg.Viewer.URL, "http://localhost:16686")
+	if cfg.Viewer.URL != "http://localhost:3000" {
+		t.Errorf("Viewer.URL = %q, want %q", cfg.Viewer.URL, "http://localhost:3000")
 	}
 }
 

@@ -9,13 +9,12 @@
 #   ./tests/integration_test.sh
 #
 # These tests verify the full Unsample pipeline:
-#   CLI → Gateway → Billing → Notification → Collector → Jaeger
+#   CLI → Gateway → Billing → Notification → Collector → Tempo
 #
 set -euo pipefail
 
 SECRET="demo-secret-do-not-use-in-production"
 GATEWAY="http://localhost:8080"
-JAEGER_API="http://localhost:16686/api"
 TEMPO_API="http://localhost:3200"
 PASS=0
 FAIL=0
@@ -72,7 +71,7 @@ echo "▶ Pre-flight checks..."
 wait_for_service "$GATEWAY/health" "gateway"
 wait_for_service "http://localhost:8081/health" "billing"
 wait_for_service "http://localhost:8082/health" "notification"
-wait_for_service "$JAEGER_API/services" "jaeger"
+wait_for_service "$TEMPO_API/ready" "tempo"
 
 echo ""
 
@@ -121,19 +120,22 @@ fi
 echo "  Waiting 5s for trace ingestion..."
 sleep 5
 
-# Check Jaeger for the trace.
-JAEGER_TRACE=$(curl -s "${JAEGER_API}/traces/${TRACE_ID}" 2>/dev/null || echo "")
+# Check Tempo for the trace.
+TEMPO_TRACE=$(curl -s "${TEMPO_API}/api/traces/${TRACE_ID}" 2>/dev/null || echo "")
 
-if echo "$JAEGER_TRACE" | grep -q '"traceID"'; then
-    pass "Trace found in Jaeger"
+if echo "$TEMPO_TRACE" | grep -q '"traceID"'; then
+    pass "Trace found in Tempo"
 
-    # Count spans.
-    SPAN_COUNT=$(echo "$JAEGER_TRACE" | python3 -c "
+    # Count spans across all batches.
+    SPAN_COUNT=$(echo "$TEMPO_TRACE" | python3 -c "
 import sys, json
 try:
     data = json.load(sys.stdin)
-    spans = data.get('data', [{}])[0].get('spans', [])
-    print(len(spans))
+    count = 0
+    for batch in data.get('batches', []):
+        for scope in batch.get('scopeSpans', []):
+            count += len(scope.get('spans', []))
+    print(count)
 except:
     print(0)
 " 2>/dev/null || echo "0")
@@ -145,13 +147,13 @@ except:
     fi
 
     # Check for debug.trace attribute.
-    if echo "$JAEGER_TRACE" | grep -q '"debug.trace"'; then
+    if echo "$TEMPO_TRACE" | grep -q 'debug.trace'; then
         pass "debug.trace attribute present"
     else
         fail "debug.trace attribute missing"
     fi
 else
-    skip "Trace not found in Jaeger (ingestion may be slow)"
+    skip "Trace not found in Tempo (ingestion may be slow)"
 fi
 
 echo ""

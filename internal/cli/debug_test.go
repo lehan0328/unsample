@@ -94,7 +94,7 @@ func TestRunDebugDisplaysResponse(t *testing.T) {
 	if !strings.Contains(output, "Debug Trace") {
 		t.Error("output missing 'Debug Trace' section")
 	}
-	if !strings.Contains(output, "localhost:16686/trace/") {
+	if !strings.Contains(output, "localhost:16686/explore") {
 		t.Error("output missing trace viewer link")
 	}
 }

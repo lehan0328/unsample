@@ -1,0 +1,18 @@
+# Grafana datasource provisioning — auto-configures Tempo on startup.
+# No manual setup needed: Grafana connects to Tempo's HTTP API.
+apiVersion: 1
+
+datasources:
+  - name: Tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    isDefault: true
+    jsonData:
+      httpMethod: GET
+      tracesToLogsV2:
+        datasourceUid: ''
+      nodeGraph:
+        enabled: true
+      serviceMap:
+        datasourceUid: ''
