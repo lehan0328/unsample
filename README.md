@@ -1,6 +1,10 @@
-<h1 align="center">
-  ⚡ Unsample
-</h1>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/logo-light.png">
+    <img src="docs/assets/logo-light.png" alt="unsample" width="400">
+  </picture>
+</p>
 
 <p align="center">
   <strong>On-demand debug tracing for OpenTelemetry.</strong><br/>
@@ -8,29 +12,59 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?colorA=1b2528&colorB=ccfbc7&style=for-the-badge" /></a>
-  <a href="https://github.com/lehan0328/unsample/actions"><img src="https://img.shields.io/badge/tests-102%20passed-brightgreen.svg?colorA=1b2528&colorB=b2d3ff&style=for-the-badge" /></a>
-  <a href="https://pkg.go.dev/github.com/unsample/unsample"><img src="https://img.shields.io/badge/go-reference-blue.svg?colorA=1b2528&colorB=FFF8BA&style=for-the-badge&logo=go" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License" /></a>
+</p>
+
+<p align="center">
+  <a href="docs/quickstart.md">Quickstart</a> · <a href="docs/cli-reference.md">CLI Reference</a> · <a href="docs/troubleshooting.md">Troubleshooting</a>
 </p>
 
 ---
 
-Unsample forces OpenTelemetry to capture **100% of spans** for a single request — across every microservice in the call chain — without changing your sampling config.
+## The Problem
+
+You sample 1% of traces in production. A user reports a bug. You check your tracing backend — the trace was dropped. You redeploy with `AlwaysSample`, drown in data, and still can't reproduce the exact request.
+
+**Unsample** lets you capture 100% of spans for a single request — across every service in the call chain — without changing your sampling config.
+
+<p align="center">
+  <img src="docs/assets/demo.gif" alt="unsample demo" width="700">
+</p>
+
+## Install
 
 ```bash
-$ unsample debug 'https://api.myapp.com/checkout?user=123'
-
-✅ Trace captured (5 spans, 847ms)
-   → http://localhost:3000/explore?traceId=4bf92f3577b34da6
-
-   gateway          12ms  ✅ OK
-   billing-service  340ms ❌ ERROR  subscription_not_found
-   notification      8ms  ✅ OK
+go install github.com/unsample/unsample/cmd/unsample@latest
 ```
 
 ## Getting Started
 
-Read through the [Quickstart Guide](docs/quickstart.md) or jump straight to the demo:
+Add the SDK middleware to your service (2 lines):
+
+```go
+handler := unsample.Middleware(unsample.Config{
+    Secret: os.Getenv("UNSAMPLE_SECRET"),
+})(mux)
+```
+
+Run a debug request:
+
+```bash
+export UNSAMPLE_SECRET="your-shared-secret"
+unsample debug 'http://localhost:8080/checkout?user=123'
+```
+
+Click the link → full trace in Grafana. See the [Quickstart Guide](docs/quickstart.md) for a complete walkthrough.
+
+## How It Works
+
+1. **CLI** signs an HMAC token, injects it as W3C baggage, and sends your request
+2. **SDK middleware** verifies the token and overrides the sampler to 100% — propagating to all downstream services
+3. **OTel Collector** routes `debug.trace=true` spans to a separate Tempo instance (cost-isolated, 7-day TTL)
+
+Zero allocations on the hot path. 99.99% of requests exit in <10ns.
+
+## Try the Demo
 
 ```bash
 git clone https://github.com/lehan0328/unsample.git
@@ -40,96 +74,6 @@ docker-compose up --build -d
 UNSAMPLE_SECRET=demo-secret-do-not-use-in-production \
   unsample debug 'http://localhost:8080/checkout?user=123'
 ```
-
-## Packages
-
-| Component | Install | Source | Docs |
-|---|---|---|---|
-| **CLI** | `go install github.com/unsample/unsample/cmd/unsample@latest` | [cmd/unsample](cmd/unsample) | [CLI Reference](#cli-reference) |
-| **Go SDK** (HTTP) | `go get github.com/unsample/unsample/sdk/go` | [sdk/go](sdk/go) | [Quickstart](docs/quickstart.md) |
-| **Go SDK** (gRPC) | Same package | [sdk/go](sdk/go) | [Quickstart](docs/quickstart.md) |
-| **Collector** | Docker image | [docker/](docker) | [Architecture](docs/architecture.md) |
-
-## How It Works
-
-```
-Developer terminal                Service A → B → C                OTel Collector
-─────────────────                 ─────────────────                ──────────────
-unsample debug <url>              SDK middleware:                  Route by attribute:
-  → HMAC-sign token                 → Verify token                  debug.trace=true → Tempo (debug)
-  → Inject as W3C baggage           → Override sampler to 100%      everything else  → Tempo (prod)
-  → Send HTTP request               → Set debug.trace=true
-  → Poll for trace                  → Propagate downstream
-```
-
-**Three components, 2 lines to add per service:**
-
-1. **CLI** → Signs a token, injects it, sends the request
-2. **SDK** → Verifies the token, overrides the sampler, propagates
-3. **Collector** → Routes debug spans to a separate backend
-
-### Performance
-
-```
-BenchmarkMiddleware_HotPath     170,694,930    7.25 ns/op    0 B/op    0 allocs/op
-```
-
-Zero allocations on the hot path. 99.99% of requests exit in <10ns.
-
-## CLI Reference
-
-```bash
-# GET request
-unsample debug 'https://api.myapp.com/users/123'
-
-# POST with curl syntax
-unsample debug --curl 'curl -X POST -H "Content-Type: application/json" -d "{}" https://api.myapp.com/checkout'
-```
-
-| Flag | Default | Description |
-|---|---|---|
-| `--timeout` | `30s` | HTTP request timeout |
-| `--config` | `~/.unsample/config.yaml` | Config file path |
-
-| Environment Variable | Description |
-|---|---|
-| `UNSAMPLE_SECRET` | HMAC shared secret (required) |
-| `UNSAMPLE_BACKEND_ENDPOINT` | Trace backend URL for polling |
-| `UNSAMPLE_VIEWER_URL` | Trace viewer base URL |
-
-### Config File
-
-```yaml
-# ~/.unsample/config.yaml
-secret: "your-shared-secret"
-backend:
-  type: tempo
-  endpoint: http://localhost:3200
-viewer:
-  type: grafana
-  url: http://localhost:3000
-```
-
-## Security
-
-| Safeguard | Prevents |
-|---|---|
-| HMAC-signed tokens | Unauthenticated flooding |
-| 2h token expiry | Replay attacks |
-| 10 debug/min rate limit | Storage saturation |
-| Never retry on throttle | Retry storm DoS |
-| 64KB payload truncation | Stack overflow from recursive payloads |
-| Zero-alloc hot path | Production latency regression |
-| Stateless per-span routing | Collector OOM crash |
-| Separate debug backend (7d TTL) | Cost isolation + PII separation |
-
-## Documentation
-
-| Doc | Description |
-|---|---|
-| [Quickstart](docs/quickstart.md) | Install → first trace in 5 minutes |
-| [Troubleshooting](docs/troubleshooting.md) | Proxy stripping, partial traces, OOM |
-| [Architecture](docs/architecture.md) | How the system works under the hood |
 
 ## FAQ
 
@@ -158,19 +102,16 @@ Any OTel-compatible backend. Tested with Grafana Tempo. The Collector can export
 No. Unsample overrides the sampler per-request at the SDK level.
 </details>
 
-## Status
+## Documentation
 
-| Component | Status |
+| Doc | Description |
 |---|---|
-| CLI (`unsample debug`) | ✅ Stable |
-| Go SDK (HTTP + gRPC) | ✅ Stable |
-| Collector routing | ✅ Stable |
-| Trace polling | ✅ Stable |
-| Demo app (3-service) | ✅ Stable |
-| Docs | 🔄 In progress |
-| `unsample init` | ⬜ Planned |
-| Homebrew / GoReleaser | ⬜ Planned |
+| [Quickstart](docs/quickstart.md) | Install → first trace in 5 minutes |
+| [CLI Reference](docs/cli-reference.md) | Commands, flags, config file |
+| [Troubleshooting](docs/troubleshooting.md) | Common issues and fixes |
 
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+If you find Unsample useful, give it a ⭐ — it helps others discover the project.
