@@ -42,9 +42,12 @@ go install github.com/unsample/unsample/cmd/unsample@latest
 Add the SDK middleware to your service (2 lines):
 
 ```go
-handler := unsample.Middleware(unsample.Config{
-    Secret: os.Getenv("UNSAMPLE_SECRET"),
-})(mux)
+handler := otelhttp.NewHandler(
+    unsample.Middleware(unsample.Config{
+        Secret: os.Getenv("UNSAMPLE_SECRET"),
+    })(mux),
+    "my-service",
+)
 ```
 
 Run a debug request:
@@ -59,7 +62,7 @@ Click the link → full trace in Grafana. See the [Quickstart Guide](docs/quicks
 ## How It Works
 
 1. **CLI** signs an HMAC token, injects it as W3C baggage, and sends your request
-2. **SDK middleware** verifies the token and overrides the sampler to 100% — propagating to all downstream services
+2. **SDK middleware** verifies the token, overrides the sampler to 100%, and captures request/response bodies (truncated to 64KB)
 3. **OTel Collector** routes `debug.trace=true` spans to a separate Tempo instance (cost-isolated, 7-day TTL)
 
 Zero allocations on the hot path. 99.99% of requests exit in <10ns.

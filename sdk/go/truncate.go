@@ -1,14 +1,14 @@
 package unsample
 
-// Truncation constants for payload capture (v2 feature).
+// Truncation constants for payload capture.
 //
 // These limits are derived from Google Sherlog's production incidents:
 //   - Incident #2: Stack overflow from recursive protobuf → MaxBodyBytes + MaxNestDepth
 //   - OTel attribute size limits → MaxStringLen
 //
-// In v2, the middleware will capture request/response bodies as OTel LogRecords
-// (NOT span attributes) with these truncation limits applied at the SDK
-// BEFORE export. This prevents Collector crashes from unbounded payloads.
+// The middleware captures request/response bodies as span attributes
+// with these truncation limits applied at the SDK BEFORE export.
+// This prevents Collector crashes from unbounded payloads.
 const (
 	// MaxBodyBytes is the maximum size of a captured request or response body.
 	// Bodies larger than this are truncated with a "[TRUNCATED]" suffix.

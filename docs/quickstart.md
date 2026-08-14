@@ -68,10 +68,13 @@ func main() {
         w.Write([]byte("Hello, world!"))
     })
 
-    // Add Unsample middleware — 2 lines.
-    handler := unsample.Middleware(unsample.Config{
-        Secret: os.Getenv("UNSAMPLE_SECRET"),
-    })(mux)
+    // Add Unsample middleware — otelhttp must wrap unsample.
+    handler := otelhttp.NewHandler(
+        unsample.Middleware(unsample.Config{
+            Secret: os.Getenv("UNSAMPLE_SECRET"),
+        })(mux),
+        "my-service",
+    )
 
     http.ListenAndServe(":8080", handler)
 }

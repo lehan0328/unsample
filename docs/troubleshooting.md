@@ -102,15 +102,15 @@ curl http://localhost:3200/ready
 Make sure your OTel HTTP handler wraps the Unsample middleware (Unsample reads the span from context):
 
 ```go
-// ✅ Correct order: OTel creates span first, then Unsample reads it
-handler := unsample.Middleware(cfg)(
-    otelhttp.NewHandler(mux, "my-service"),
-)
-
-// ❌ Wrong order: Unsample runs before OTel creates a span
+// ✅ Correct order: OTel parses baggage first, then Unsample reads it
 handler := otelhttp.NewHandler(
     unsample.Middleware(cfg)(mux),
     "my-service",
+)
+
+// ❌ Wrong order: Unsample runs before baggage is parsed
+handler := unsample.Middleware(cfg)(
+    otelhttp.NewHandler(mux, "my-service"),
 )
 ```
 
