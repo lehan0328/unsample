@@ -39,6 +39,13 @@ type Config struct {
 	// AttributeKey is the span attribute key to set on debug spans.
 	// Default: "debug.trace".
 	AttributeKey string
+
+	// CaptureBody enables request/response body capture on debug traces.
+	// Bodies are truncated to 64KB. Only text/JSON content types are captured.
+	// Default: true.
+	CaptureBody bool
+
+	captureBodySet bool // tracks whether CaptureBody was explicitly set
 }
 
 // defaults fills in zero-value fields with sensible defaults.
@@ -51,5 +58,8 @@ func (c *Config) defaults() {
 	}
 	if c.AttributeKey == "" {
 		c.AttributeKey = "debug.trace"
+	}
+	if !c.captureBodySet {
+		c.CaptureBody = true
 	}
 }

@@ -19,7 +19,8 @@ import (
 //
 // Cold path (debug requests only):
 //
-//	Verify HMAC token → set debug.trace=true span attribute → call next handler.
+//	Verify HMAC token → capture request/response bodies → set debug.trace=true
+//	span attribute → call next handler. Bodies are truncated to 64KB.
 //	Baggage is automatically propagated to downstream calls by OTel propagators.
 //
 // If the secret is empty, the middleware is a no-op (all requests pass through).
@@ -54,7 +55,33 @@ func Middleware(cfg Config) func(http.Handler) http.Handler {
 			span := trace.SpanFromContext(r.Context())
 			span.SetAttributes(attribute.Bool(cfg.AttributeKey, true))
 
-			next.ServeHTTP(w, r)
+			// Capture request body (if text/JSON content).
+			if cfg.CaptureBody && isTextContent(r.Header.Get("Content-Type")) {
+				reqBody, reqTruncated := captureRequestBody(r)
+				if reqBody != "" {
+					span.SetAttributes(attribute.String("http.request.body", reqBody))
+					if reqTruncated {
+						span.SetAttributes(attribute.Bool("http.request.body.truncated", true))
+					}
+				}
+			}
+
+			// Capture response body by wrapping the ResponseWriter.
+			if cfg.CaptureBody {
+				rc := newResponseCapture(w, MaxBodyBytes)
+				next.ServeHTTP(rc, r)
+
+				respBody, respTruncated := rc.capturedBody()
+				if respBody != "" {
+					span.SetAttributes(attribute.String("http.response.body", respBody))
+					if respTruncated {
+						span.SetAttributes(attribute.Bool("http.response.body.truncated", true))
+					}
+				}
+			} else {
+				next.ServeHTTP(w, r)
+			}
 		})
 	}
 }
+
