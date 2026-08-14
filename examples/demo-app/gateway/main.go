@@ -82,8 +82,9 @@ func main() {
 	})
 
 	// Wrap with Unsample middleware + OTel HTTP instrumentation.
-	handler := unsample.Middleware(unsample.Config{Secret: secret})(
-		otelhttp.NewHandler(mux, "gateway"),
+	handler := otelhttp.NewHandler(
+		unsample.Middleware(unsample.Config{Secret: secret})(mux),
+		"gateway",
 	)
 
 	port := os.Getenv("PORT")

@@ -61,8 +61,9 @@ func main() {
 		fmt.Fprint(w, `{"status":"ok"}`)
 	})
 
-	handler := unsample.Middleware(unsample.Config{Secret: secret})(
-		otelhttp.NewHandler(mux, "notification"),
+	handler := otelhttp.NewHandler(
+		unsample.Middleware(unsample.Config{Secret: secret})(mux),
+		"notification",
 	)
 
 	port := os.Getenv("PORT")
