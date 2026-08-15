@@ -37,7 +37,7 @@ You sample 1% of traces in production. A user reports a bug. You check your trac
 # Homebrew (macOS/Linux)
 brew install lehan0328/tap/unsample
 
-# Go (requires Go 1.21+)
+# Go (requires Go 1.26+)
 go install github.com/unsample/unsample/cmd/unsample@latest
 
 # Or download a binary from GitHub Releases
@@ -125,6 +125,7 @@ No. Unsample overrides the sampler per-request at the SDK level.
 | [Quickstart](docs/quickstart.md) | Install → first trace in 5 minutes |
 | [CLI Reference](docs/cli-reference.md) | Commands, flags, config file |
 | [Troubleshooting](docs/troubleshooting.md) | Common issues and fixes |
+| [Contributing](CONTRIBUTING.md) | Development setup + how to contribute |
 
 ## License
 

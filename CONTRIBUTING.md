@@ -19,7 +19,7 @@ make test
 make install
 ```
 
-**Requirements:** Go 1.21+, Docker (for demo app).
+**Requirements:** Go 1.26+, Docker (for demo app).
 
 ## Running the Demo App
 
@@ -68,9 +68,9 @@ Look for issues labeled [`good first issue`](https://github.com/lehan0328/unsamp
 
 - Add `unsample debug --method POST` flag
 - Add `unsample debug --header "Key: Value"` flag
-- Shell completion for bash/zsh/fish
 - `unsample init --minimal` (config only, no Docker Compose)
 - Python/Node.js SDK middleware
+- Jaeger viewer support (in addition to Grafana)
 
 ## Running Specific Tests
 
@@ -97,7 +97,7 @@ git tag v0.1.0
 git push --tags
 ```
 
-The [release workflow](.github/workflows/release.yml) builds cross-platform binaries and publishes a GitHub Release.
+The [release workflow](.github/workflows/release.yml) builds cross-platform binaries, publishes a GitHub Release, and pushes a Homebrew formula to [lehan0328/homebrew-tap](https://github.com/lehan0328/homebrew-tap).
 
 ## License
 

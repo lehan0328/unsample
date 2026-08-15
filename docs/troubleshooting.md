@@ -6,18 +6,25 @@ Common issues and solutions when using Unsample.
 
 ```
 Error: no secret configured
-Set UNSAMPLE_SECRET environment variable or add 'secret' to ~/.unsample/config.yaml
+Set UNSAMPLE_SECRET environment variable or add 'secret' to config file
 ```
 
-**Fix:** Set the `UNSAMPLE_SECRET` environment variable or create a config file:
+**Fix:** Run `unsample init` to generate a config with a random secret:
 
+```bash
+unsample init
+```
+
+This creates `.unsample/config.yaml` with a generated secret. The CLI auto-discovers it.
+
+Or set the secret manually:
 ```bash
 export UNSAMPLE_SECRET="your-shared-secret"
 ```
 
-Or:
+Or create a config file:
 ```yaml
-# ~/.unsample/config.yaml
+# ~/.unsample/config.yaml or .unsample/config.yaml
 secret: "your-shared-secret"
 ```
 
