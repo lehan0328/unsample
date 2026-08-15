@@ -125,6 +125,45 @@ Run 'docker compose -f .unsample/docker-compose.yaml up -d' to start.`,
 
 	rootCmd.AddCommand(initCmd)
 
+	// Completion command (built-in from Cobra)
+	completionCmd := &cobra.Command{
+		Use:   "completion [bash|zsh|fish|powershell]",
+		Short: "Generate shell completion scripts",
+		Long: `Generate shell completion scripts for unsample.
+
+To load completions:
+
+  bash:
+    source <(unsample completion bash)
+
+  zsh:
+    echo 'source <(unsample completion zsh)' >> ~/.zshrc
+
+  fish:
+    unsample completion fish | source
+
+  powershell:
+    unsample completion powershell | Out-String | Invoke-Expression`,
+		DisableFlagsInUseLine: true,
+		ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
+		Args:                  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			switch args[0] {
+			case "bash":
+				return rootCmd.GenBashCompletion(os.Stdout)
+			case "zsh":
+				return rootCmd.GenZshCompletion(os.Stdout)
+			case "fish":
+				return rootCmd.GenFishCompletion(os.Stdout, true)
+			case "powershell":
+				return rootCmd.GenPowerShellCompletionWithDesc(os.Stdout)
+			}
+			return nil
+		},
+	}
+
+	rootCmd.AddCommand(completionCmd)
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
