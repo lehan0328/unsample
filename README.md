@@ -67,7 +67,6 @@ handler := otelhttp.NewHandler(
 Send a debug request:
 
 ```bash
-export UNSAMPLE_SECRET=$(grep secret .unsample/config.yaml | awk '{print $2}')
 unsample debug 'http://localhost:8080/checkout?user=123'
 ```
 

@@ -57,9 +57,10 @@ func defaultConfig() *Config {
 //
 // Priority (highest wins):
 //  1. Explicit path (--config flag)
-//  2. Default path (~/.unsample/config.yaml)
-//  3. Environment variables (UNSAMPLE_SECRET)
-//  4. Built-in defaults
+//  2. Environment variables (UNSAMPLE_SECRET)
+//  3. User-level config (~/.unsample/config.yaml)
+//  4. Project-local config (.unsample/config.yaml in cwd)
+//  5. Built-in defaults
 func LoadConfig(path string) (*Config, error) {
 	cfg := defaultConfig()
 
@@ -72,12 +73,17 @@ func LoadConfig(path string) (*Config, error) {
 		return cfg, nil
 	}
 
-	// Try default path.
+	// Try project-local config first (.unsample/config.yaml in cwd).
+	localPath := filepath.Join(".unsample", "config.yaml")
+	if _, statErr := os.Stat(localPath); statErr == nil {
+		_ = loadFromFile(cfg, localPath)
+	}
+
+	// Try user-level default path (~/.unsample/config.yaml).
 	home, err := os.UserHomeDir()
 	if err == nil {
 		defaultPath := filepath.Join(home, ".unsample", "config.yaml")
 		if _, statErr := os.Stat(defaultPath); statErr == nil {
-			// File exists — load it, but don't fail if it's malformed.
 			_ = loadFromFile(cfg, defaultPath)
 		}
 	}
