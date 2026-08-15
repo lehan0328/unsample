@@ -34,7 +34,11 @@ You sample 1% of traces in production. A user reports a bug. You check your trac
 ## Install
 
 ```bash
+# Go (requires Go 1.21+)
 go install github.com/unsample/unsample/cmd/unsample@latest
+
+# Or download a binary from GitHub Releases
+# https://github.com/lehan0328/unsample/releases
 ```
 
 ## Getting Started

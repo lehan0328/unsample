@@ -1,0 +1,78 @@
+# OTel Collector Configuration for Unsample
+#
+# Pipeline design:
+#   1. OTLP receiver accepts traces from instrumented services
+#   2. Routing connector inspects debug.trace attribute
+#   3. Debug spans → Tempo (with batch processor)
+#   4. All spans → Tempo production pipeline (with probabilistic sampling)
+#
+# Pipeline ordering (per otel-collector-development skill):
+#   memory_limiter FIRST → routing/filtering EARLY → batch LAST
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  # ALWAYS first — prevents OOM before any processing.
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+
+  # Batching — always last before export.
+  batch:
+    send_batch_size: 1024
+    timeout: 1s
+
+connectors:
+  # Routes spans based on the debug.trace attribute.
+  # This is the contrib-image equivalent of our custom unsample processor.
+  # In production, replace with the custom binary that includes
+  # the unsampleprocessor for rate limiting.
+  routing:
+    default_pipelines: [traces/production]
+    error_mode: ignore
+    table:
+      - statement: route() where attributes["debug.trace"] == true
+        pipelines: [traces/debug]
+
+exporters:
+  # Debug pipeline → Tempo (all debug spans, no sampling).
+  otlphttp/debug:
+    endpoint: http://tempo:4318
+
+  # Production pipeline → Tempo (sampled).
+  otlphttp/production:
+    endpoint: http://tempo:4318
+
+  # Console debug output (useful during development).
+  debug:
+    verbosity: basic
+
+service:
+  telemetry:
+    logs:
+      level: info
+
+  pipelines:
+    # Ingestion pipeline — receives all traces, routes via connector.
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [routing]
+
+    # Debug pipeline — receives routed debug spans, exports to Tempo.
+    traces/debug:
+      receivers: [routing]
+      processors: [batch]
+      exporters: [otlphttp/debug, debug]
+
+    # Production pipeline — receives non-debug spans, exports to Tempo.
+    traces/production:
+      receivers: [routing]
+      processors: [batch]
+      exporters: [otlphttp/production]

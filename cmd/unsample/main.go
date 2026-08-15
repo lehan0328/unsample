@@ -92,6 +92,39 @@ The CLI will:
 
 	rootCmd.AddCommand(debugCmd)
 
+	// Init command
+	var (
+		initDir   string
+		initForce bool
+	)
+
+	initCmd := &cobra.Command{
+		Use:   "init",
+		Short: "Generate Collector config + setup guide",
+		Long: `Generate the configuration files needed to run Unsample locally.
+
+Creates a .unsample/ directory with:
+  - config.yaml          CLI config with a generated secret
+  - docker-compose.yaml  OTel Collector + Tempo + Grafana
+  - otel-collector-config.yaml
+  - tempo-config.yaml
+  - grafana-datasources.yaml
+
+Run 'docker compose -f .unsample/docker-compose.yaml up -d' to start.`,
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cli.RunInit(cli.InitOpts{
+				Dir:   initDir,
+				Force: initForce,
+			})
+		},
+	}
+
+	initCmd.Flags().StringVar(&initDir, "dir", ".unsample", "Output directory for generated files")
+	initCmd.Flags().BoolVar(&initForce, "force", false, "Overwrite existing files")
+
+	rootCmd.AddCommand(initCmd)
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)

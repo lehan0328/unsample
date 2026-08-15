@@ -1,0 +1,78 @@
+# GoReleaser v2 configuration for Unsample.
+# Triggered by pushing a v* tag (e.g., v0.1.0).
+# See: https://goreleaser.com/customization/
+
+version: 2
+
+project_name: unsample
+
+builds:
+  - binary: unsample
+    main: ./cmd/unsample/
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X github.com/unsample/unsample/internal/version.Version={{.Version}} -X github.com/unsample/unsample/internal/version.Commit={{.ShortCommit}}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - formats: [tar.gz]
+    name_template: '{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}'
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: '{{ .ProjectName }}-{{ .Version }}-checksums.txt'
+
+snapshot:
+  version_template: SNAPSHOT-{{ .Commit }}
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '(?i)^docs?:'
+      - '(?i)^chore:'
+      - '^tests?:'
+      - Merge pull request
+      - Merge branch
+
+release:
+  github:
+    owner: lehan0328
+    name: unsample
+  header: |
+    ## What's New
+
+    On-demand debug tracing for OpenTelemetry.
+
+    ### Install
+    ```bash
+    # Go
+    go install github.com/unsample/unsample/cmd/unsample@v{{ .Version }}
+
+    # Or download the binary for your platform below.
+    ```
+
+# Homebrew tap — uncomment after creating lehan0328/homebrew-tap repo.
+# brews:
+#   - name: unsample
+#     description: On-demand debug tracing for OpenTelemetry.
+#     homepage: https://github.com/lehan0328/unsample
+#     license: MIT
+#     repository:
+#       owner: lehan0328
+#       name: homebrew-tap
+#     directory: Formula
+#     install: |
+#       bin.install "unsample"
+#     test: |
+#       system "#{bin}/unsample", "version"

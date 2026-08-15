@@ -31,3 +31,4 @@ collector-build/
 # Test
 coverage.out
 coverage.html
+/tmp/test-unsample-init/
