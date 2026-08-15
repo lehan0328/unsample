@@ -21,10 +21,6 @@
 
 ---
 
-## The Problem
-
-You sample 1% of traces in production. A user reports a bug. You check your tracing backend — the trace was dropped. You redeploy with `AlwaysSample`, drown in data, and still can't reproduce the exact request.
-
 **Unsample** lets you capture 100% of spans for a single request — across every service in the call chain — without changing your sampling config.
 
 <p align="center">
