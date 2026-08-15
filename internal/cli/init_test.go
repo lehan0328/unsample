@@ -54,11 +54,11 @@ func TestRunInit_Default(t *testing.T) {
 func TestRunInit_SkipsExisting(t *testing.T) {
 	dir := t.TempDir()
 	outDir := filepath.Join(dir, ".unsample")
-	os.MkdirAll(outDir, 0o755)
+	_ = os.MkdirAll(outDir, 0o755)
 
 	// Create a pre-existing config.yaml.
 	existing := []byte("secret: my-existing-secret\n")
-	os.WriteFile(filepath.Join(outDir, "config.yaml"), existing, 0o644)
+	_ = os.WriteFile(filepath.Join(outDir, "config.yaml"), existing, 0o644)
 
 	err := RunInit(InitOpts{Dir: outDir})
 	if err != nil {
@@ -75,11 +75,11 @@ func TestRunInit_SkipsExisting(t *testing.T) {
 func TestRunInit_ForceOverwrites(t *testing.T) {
 	dir := t.TempDir()
 	outDir := filepath.Join(dir, ".unsample")
-	os.MkdirAll(outDir, 0o755)
+	_ = os.MkdirAll(outDir, 0o755)
 
 	// Create a pre-existing config.yaml.
 	existing := []byte("secret: my-existing-secret\n")
-	os.WriteFile(filepath.Join(outDir, "config.yaml"), existing, 0o644)
+	_ = os.WriteFile(filepath.Join(outDir, "config.yaml"), existing, 0o644)
 
 	err := RunInit(InitOpts{Dir: outDir, Force: true})
 	if err != nil {

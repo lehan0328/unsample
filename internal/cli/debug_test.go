@@ -18,7 +18,7 @@ func TestRunDebugInjectsHeaders(t *testing.T) {
 		capturedHeaders = r.Header.Clone()
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok"}`))
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	}))
 	defer srv.Close()
 
@@ -61,7 +61,7 @@ func TestRunDebugDisplaysResponse(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"result":"success"}`))
+		_, _ = w.Write([]byte(`{"result":"success"}`))
 	}))
 	defer srv.Close()
 
@@ -145,7 +145,7 @@ func TestRunDebugWithCurl(t *testing.T) {
 func TestRunDebugServerError(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error":"something broke"}`))
+		_, _ = w.Write([]byte(`{"error":"something broke"}`))
 	}))
 	defer srv.Close()
 

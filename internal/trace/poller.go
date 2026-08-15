@@ -234,8 +234,8 @@ func extractServiceName(r resource) string {
 // computeDurationMs calculates duration from nanosecond timestamps.
 func computeDurationMs(startNano, endNano string) int64 {
 	var start, end int64
-	fmt.Sscanf(startNano, "%d", &start)
-	fmt.Sscanf(endNano, "%d", &end)
+	_, _ = fmt.Sscanf(startNano, "%d", &start)
+	_, _ = fmt.Sscanf(endNano, "%d", &end)
 	if end <= start {
 		return 0
 	}

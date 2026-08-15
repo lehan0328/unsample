@@ -153,9 +153,9 @@ func addToGitignore(dir string) {
 
 	// Add newline if file doesn't end with one.
 	if len(content) > 0 && content[len(content)-1] != '\n' {
-		f.WriteString("\n")
+		_, _ = f.WriteString("\n")
 	}
-	f.WriteString(entry + "\n")
+	_, _ = f.WriteString(entry + "\n")
 }
 
 // printInitSuccess prints the post-init instructions.
