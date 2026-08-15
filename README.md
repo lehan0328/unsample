@@ -43,7 +43,14 @@ go install github.com/unsample/unsample/cmd/unsample@latest
 
 ## Getting Started
 
-Add the SDK middleware to your service (2 lines):
+Set up the trace backend (one-time):
+
+```bash
+unsample init
+docker compose -f .unsample/docker-compose.yaml up -d
+```
+
+Add the SDK middleware to your service:
 
 ```go
 handler := otelhttp.NewHandler(
@@ -54,10 +61,10 @@ handler := otelhttp.NewHandler(
 )
 ```
 
-Run a debug request:
+Send a debug request:
 
 ```bash
-export UNSAMPLE_SECRET="your-shared-secret"
+export UNSAMPLE_SECRET=$(grep secret .unsample/config.yaml | awk '{print $2}')
 unsample debug 'http://localhost:8080/checkout?user=123'
 ```
 
