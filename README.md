@@ -34,6 +34,9 @@ You sample 1% of traces in production. A user reports a bug. You check your trac
 ## Install
 
 ```bash
+# Homebrew (macOS/Linux)
+brew install lehan0328/tap/unsample
+
 # Go (requires Go 1.21+)
 go install github.com/unsample/unsample/cmd/unsample@latest
 
